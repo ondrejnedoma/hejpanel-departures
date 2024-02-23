@@ -12,3 +12,4 @@ npm i -g pm2
 pm2 start index.js
 pm2 startup # Ensure that processes start again after a system reboot
 ```
+You will now have a server running on port 42069. You may redirect it using a reverse proxy like nginx.
