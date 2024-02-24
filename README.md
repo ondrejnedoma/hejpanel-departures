@@ -3,6 +3,8 @@ The public transport departures backend component for [K0stka/HejPanel](https://
 
 ## Consuming the API
 A public instance is hosted on [hejpanel-departures.102.nedomovi.net](hejpanel-departures.102.nedomovi.net).
+> [!NOTE]
+> Your IP address and request time will be logged. This will be used to spot and block any spammers.
 
 ## Self-hosting
 Using node and pm2:
