@@ -43,12 +43,21 @@ const transformData = (html) => {
   return output;
 }
 
+const logRequestInfo = (req, res, next) => {
+  const currentTime = new Date().toLocaleString();
+  const clientIP = req.ip || req.connection.remoteAddress;
+  console.log(`[${currentTime}] ${clientIP}`);
+  next();
+};
+
+app.use(logRequestInfo)
+
 app.get('/', async (req, res) => {
   const natratiFunction = async () => {
     const busResponse = await fetch("https://idos.idnes.cz/vlakyautobusymhdvse/odjezdy/vysledky/?f=Olomouc,,Na%20trati&fc=200003");
     const busHtml = await busResponse.text();
     const busTransformedData = transformData(busHtml);
-    console.log(busTransformedData)
+
     const trainResponse = await fetch("https://idos.idnes.cz/vlakyautobusymhdvse/odjezdy/vysledky/?f=Olomouc-Hej%C4%8D%C3%ADn&fc=100003");
     const trainHtml = await trainResponse.text();
     const trainTransformedData = transformData(trainHtml);
