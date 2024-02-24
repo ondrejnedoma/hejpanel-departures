@@ -45,8 +45,7 @@ const transformData = (html) => {
 
 const logRequestInfo = (req, res, next) => {
   const currentTime = new Date().toLocaleString();
-  const clientIP = req.ip || req.connection.remoteAddress;
-  console.log(`[${currentTime}] ${clientIP}`);
+  console.log(`[${currentTime}]`);
   next();
 };
 
