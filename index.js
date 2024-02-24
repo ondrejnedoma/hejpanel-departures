@@ -48,13 +48,13 @@ app.get('/', async (req, res) => {
     const busResponse = await fetch("https://idos.idnes.cz/vlakyautobusymhdvse/odjezdy/vysledky/?f=Olomouc,,Na%20trati&fc=200003");
     const busHtml = await busResponse.text();
     const busTransformedData = transformData(busHtml);
-
+    console.log(busTransformedData)
     const trainResponse = await fetch("https://idos.idnes.cz/vlakyautobusymhdvse/odjezdy/vysledky/?f=Olomouc-Hej%C4%8D%C3%ADn&fc=100003");
     const trainHtml = await trainResponse.text();
     const trainTransformedData = transformData(trainHtml);
 
     const transformedData = [...busTransformedData, ...trainTransformedData];
-    transformedData.sort((a, b) => a.scheduled.localeCompare(b.time));
+    transformedData.sort((a, b) => a.scheduled.localeCompare(b.scheduled));
 
     return transformedData.slice(0, 4)
   }
