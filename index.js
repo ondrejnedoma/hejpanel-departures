@@ -1,6 +1,8 @@
+const portArgIndex = process.argv.indexOf("-p");
+const port = portArgIndex !== -1 ? process.argv[portArgIndex + 1] : 42069;
+
 import express from "express";
 const app = express();
-const port = 42069;
 import * as cheerio from "cheerio";
 import moment from "moment";
 
