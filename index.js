@@ -2,9 +2,18 @@ const portArgIndex = process.argv.indexOf("-p");
 const port = portArgIndex !== -1 ? process.argv[portArgIndex + 1] : 42069;
 
 import express from "express";
+import cors from "cors";
 const app = express();
 import * as cheerio from "cheerio";
 import moment from "moment";
+
+app.use(cors());
+const logRequestInfo = (req, res, next) => {
+  const currentTime = new Date().toLocaleString();
+  console.log(`[${currentTime}]`);
+  next();
+};
+app.use(logRequestInfo);
 
 const transformData = (html) => {
   const output = [];
@@ -51,49 +60,49 @@ const transformData = (html) => {
   return output;
 };
 
-const logRequestInfo = (req, res, next) => {
-  const currentTime = new Date().toLocaleString();
-  console.log(`[${currentTime}]`);
-  next();
+const natratiFunction = async () => {
+  const busResponse = await fetch(
+    "https://idos.idnes.cz/vlakyautobusymhdvse/odjezdy/vysledky/?f=Olomouc,,Na%20trati&fc=200003"
+  );
+  const busHtml = await busResponse.text();
+  const busTransformedData = transformData(busHtml);
+
+  const trainResponse = await fetch(
+    "https://idos.idnes.cz/vlakyautobusymhdvse/odjezdy/vysledky/?f=Olomouc-Hej%C4%8D%C3%ADn&fc=100003"
+  );
+  const trainHtml = await trainResponse.text();
+  const trainTransformedData = transformData(trainHtml);
+
+  const transformedData = [...busTransformedData, ...trainTransformedData];
+  transformedData.sort((a, b) => {
+    const timeA = moment(a.scheduled, "H:mm");
+    const timeB = moment(b.scheduled, "H:mm");
+    return timeA.isBefore(timeB) ? -1 : 1;
+  });
+
+  return transformedData.slice(0, 4);
 };
 
-app.use(logRequestInfo);
+const ladovaFunction = async () => {
+  const response = await fetch(
+    "https://idos.idnes.cz/vlakyautobusymhdvse/odjezdy/vysledky/?f=Olomouc,,Ladova&fc=200003"
+  );
+  const html = await response.text();
+  const transformedData = transformData(html);
+
+  return transformedData.slice(0, 4);
+};
 
 app.get("/", async (req, res) => {
-  const natratiFunction = async () => {
-    const busResponse = await fetch(
-      "https://idos.idnes.cz/vlakyautobusymhdvse/odjezdy/vysledky/?f=Olomouc,,Na%20trati&fc=200003"
-    );
-    const busHtml = await busResponse.text();
-    const busTransformedData = transformData(busHtml);
-
-    const trainResponse = await fetch(
-      "https://idos.idnes.cz/vlakyautobusymhdvse/odjezdy/vysledky/?f=Olomouc-Hej%C4%8D%C3%ADn&fc=100003"
-    );
-    const trainHtml = await trainResponse.text();
-    const trainTransformedData = transformData(trainHtml);
-
-    const transformedData = [...busTransformedData, ...trainTransformedData];
-    transformedData.sort((a, b) => {
-      const timeA = moment(a.scheduled, "H:mm");
-      const timeB = moment(b.scheduled, "H:mm");
-      return timeA.isBefore(timeB) ? -1 : 1;
-    });
-
-    return transformedData.slice(0, 4);
-  };
-  const ladovaFunction = async () => {
-    const response = await fetch(
-      "https://idos.idnes.cz/vlakyautobusymhdvse/odjezdy/vysledky/?f=Olomouc,,Ladova&fc=200003"
-    );
-    const html = await response.text();
-    const transformedData = transformData(html);
-
-    return transformedData.slice(0, 4);
-  };
-  const natratiResult = await natratiFunction();
-  const ladovaResult = await ladovaFunction();
-  res.json({ natrati: natratiResult, ladova: ladovaResult });
+  try {
+    const [natratiResult, ladovaResult] = await Promise.all([
+      natratiFunction(),
+      ladovaFunction(),
+    ]);
+    res.json({ natrati: natratiResult, ladova: ladovaResult });
+  } catch {
+    res.status(500).json({ error: "Couldn't fetch data from IDOS" });
+  }
 });
 
 app.listen(port, () => console.log("Listening on http://localhost:" + port));
