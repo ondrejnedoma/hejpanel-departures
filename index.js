@@ -73,9 +73,17 @@ app.get('/', async (req, res) => {
 
     return transformedData.slice(0, 4)
   }
-  const natratiResult = await natratiFunction()
-  const ladovaResult = await ladovaFunction()
-  res.json({ natrati: natratiResult, ladova: ladovaResult })
+
+	res.header("Access-Control-Allow-Origin", "https://krychlic.com");
+	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+
+	Promise.all([natratiFunction(), ladovaFunction()])
+		.then(([natratiResult, ladovaResult]) => {
+			res.json({ natrati: natratiResult, ladova: ladovaResult });
+		})
+		.catch(() => {
+			res.json({});
+		});
 })
 
 app.listen(port)
