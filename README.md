@@ -12,5 +12,5 @@ cd hejpanel-departures
 npm i
 npm i -g pm2
 pm2 start index.js --name hejpanel-departures -- -p 3000 # The port is optional and defaults to 42069 if unspecified
-pm2 startup # Ensure that processes start again after a system reboot
+pm2 startup && pm2 save # Ensure that processes start again after a system reboot
 ```
