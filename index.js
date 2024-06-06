@@ -28,8 +28,9 @@ const transformData = (html) => {
       .find("td:eq(1) > span:eq(1) > span > h3")
       .text()
       .trim()
-      .split(" ")[1]
-      .trim();
+      .split(" ")
+      .pop()
+      .replace(/\D/g, "");
     const time = $(row).find("td:eq(2) > h3").text().trim();
     const delay = $(secondRows[index]).find("td:eq(2) > a").text().trim();
     // Is it tomorrow's connection? If so, return
@@ -43,17 +44,11 @@ const transformData = (html) => {
     } else if (delay.includes("bez")) {
       transformedDelay = 0;
     }
-    // Is the connection leaving soon? If yes, blinking is true.
-    const scheduledDate = moment(time, "H:mm");
-    const delayedDate = scheduledDate.clone().add(delay, "minutes");
-    const currentDate = moment();
-    const blinking = delayedDate.diff(currentDate, "minutes") <= 5;
     output.push({
       destination,
       number,
       scheduled: time,
       delay: transformedDelay,
-      blinking,
     });
   });
 
@@ -80,7 +75,7 @@ const natratiFunction = async () => {
     return timeA.isBefore(timeB) ? -1 : 1;
   });
 
-  return transformedData.slice(0, 4);
+  return transformedData.slice(0, 3);
 };
 
 const ladovaFunction = async () => {
@@ -90,7 +85,7 @@ const ladovaFunction = async () => {
   const html = await response.text();
   const transformedData = transformData(html);
 
-  return transformedData.slice(0, 4);
+  return transformedData.slice(0, 3);
 };
 
 app.get("/", async (req, res) => {
@@ -99,7 +94,9 @@ app.get("/", async (req, res) => {
       natratiFunction(),
       ladovaFunction(),
     ]);
-    res.json({ natrati: natratiResult, ladova: ladovaResult });
+    const result = { natrati: natratiResult, ladova: ladovaResult };
+    console.log(result);
+    res.json(result);
   } catch {
     res.status(500).json({ error: "Couldn't fetch data from IDOS" });
   }
